@@ -1,0 +1,19 @@
+# GitLab CI/CD — Alem Tutor
+# Автоматический деплой на GitLab Pages
+
+stages:
+  - deploy
+
+pages:
+  stage: deploy
+  script:
+    - mkdir -p public
+    - cp index.html public/
+    - cp architecture.html public/
+    - cp pitch-deck.html public/
+    - cp README.md public/
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
