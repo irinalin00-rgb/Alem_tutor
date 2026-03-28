@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Alem Tutor — Pitch Deck</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0f1e;--accent:#4ade80;--accent2:#22d3ee;--pink:#FF0090;--text:#f1f5f9;--muted:#64748b;--surface:#111827;--surface2:#1a2235}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;overflow-x:hidden}
+.slides{width:100%;max-width:960px;margin:0 auto;padding:20px}
+.slide{background:var(--surface);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:48px;margin-bottom:24px;position:relative;overflow:hidden;min-height:480px;display:flex;flex-direction:column;justify-content:center}
+.slide::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(74,222,128,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(74,222,128,0.02) 1px,transparent 1px);background-size:30px 30px;pointer-events:none}
+.slide-num{position:absolute;top:20px;right:24px;font-size:11px;color:var(--muted);font-family:monospace;letter-spacing:1px}
+.tag{display:inline-block;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:16px}
+.tag-green{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:var(--accent)}
+.tag-pink{background:rgba(255,0,144,.1);border:1px solid rgba(255,0,144,.3);color:var(--pink)}
+.tag-blue{background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3);color:var(--accent2)}
+h1{font-size:52px;font-weight:800;line-height:1.1;margin-bottom:16px}
+h2{font-size:32px;font-weight:700;line-height:1.2;margin-bottom:16px}
+h3{font-size:20px;font-weight:600;margin-bottom:10px}
+.accent{color:var(--accent)}
+.pink{color:var(--pink)}
+.blue{color:var(--accent2)}
+p{color:rgba(255,255,255,.65);line-height:1.7;font-size:16px}
+.big-stat{font-size:56px;font-weight:800;color:var(--accent);line-height:1}
+.stat-label{font-size:14px;color:var(--muted);margin-top:6px}
+.stats-row{display:flex;gap:32px;margin:24px 0;flex-wrap:wrap}
+.stat-box{flex:1;min-width:120px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:24px}
+.card{background:var(--surface2);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:20px}
+.card h3{font-size:16px;margin-bottom:8px}
+.card p{font-size:13px}
+.tool-row{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface2);border:1px solid rgba(255,255,255,.06);border-radius:10px;margin-bottom:8px}
+.tool-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.tool-name{font-size:14px;font-weight:600;color:var(--text)}
+.tool-desc{font-size:12px;color:var(--muted)}
+.check{color:var(--accent);font-size:16px;margin-left:auto}
+.timeline{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.tl-item{display:flex;gap:16px;align-items:flex-start}
+.tl-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);margin-top:5px;flex-shrink:0}
+.tl-dot.pink{background:var(--pink)}
+.tl-dot.blue{background:var(--accent2)}
+.tl-content h4{font-size:14px;font-weight:600;margin-bottom:3px}
+.tl-content p{font-size:12px;color:var(--muted)}
+.hero-sub{font-size:20px;color:rgba(255,255,255,.5);margin-bottom:32px;font-weight:400}
+.badge-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.badge{padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid}
+table{width:100%;border-collapse:collapse;margin-top:16px}
+th{text-align:left;padding:10px 14px;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.5px;border-bottom:1px solid rgba(255,255,255,.06)}
+td{padding:12px 14px;font-size:14px;border-bottom:1px solid rgba(255,255,255,.04)}
+.ok{color:var(--accent)}
+.wait{color:#f59e0b}
+</style>
+</head>
+<body>
+<div class="slides">
+
+  <!-- SLIDE 1: TITLE -->
+  <div class="slide" style="text-align:center;align-items:center">
+    <div class="slide-num">01 / 08</div>
+    <div class="tag tag-green">DECENTRATHON 5.0 • ТРЕК ALEM+</div>
+    <h1>Alem <span class="accent">Tutor</span></h1>
+    <p class="hero-sub">AI мұғалім для школьников Казахстана</p>
+    <p style="max-width:500px;text-align:center">Умный тьютор + детектор фейков на базе казахского ИИ AlemLLM</p>
+    <div class="badge-row" style="justify-content:center">
+      <div class="badge" style="border-color:rgba(74,222,128,.3);color:var(--accent)">AlemLLM</div>
+      <div class="badge" style="border-color:rgba(34,211,238,.3);color:var(--accent2)">Speech-to-text KZ</div>
+      <div class="badge" style="border-color:rgba(255,165,0,.3);color:#f59e0b">RAGFlow</div>
+      <div class="badge" style="border-color:rgba(255,0,144,.3);color:var(--pink)">FakeGuard</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: PROBLEM -->
+  <div class="slide">
+    <div class="slide-num">02 / 08</div>
+    <div class="tag tag-pink">ПРОБЛЕМА</div>
+    <h2>Миллионы школьников <span class="pink">без репетитора</span></h2>
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="big-stat" style="color:#FF0090">3M+</div>
+        <div class="stat-label">школьников в Казахстане</div>
+      </div>
+      <div class="stat-box">
+        <div class="big-stat" style="color:#f59e0b">70%</div>
+        <div class="stat-label">живут вне крупных городов</div>
+      </div>
+      <div class="stat-box">
+        <div class="big-stat" style="color:var(--accent)">0</div>
+        <div class="stat-label">доступных AI-тьюторов на казахском</div>
+      </div>
+    </div>
+    <p>После уроков не у кого спросить — родители заняты, учителя недоступны. Репетиторы стоят дорого. В регионах их вообще нет. При этом фейковые «учебные» материалы в соцсетях распространяются молниеносно.</p>
+  </div>
+
+  <!-- SLIDE 3: SOLUTION -->
+  <div class="slide">
+    <div class="slide-num">03 / 08</div>
+    <div class="tag tag-green">РЕШЕНИЕ</div>
+    <h2>Alem Tutor — <span class="accent">личный репетитор</span> в кармане</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>🤖 AI Тьютор</h3>
+        <p>Объясняет любой предмет голосом и текстом на казахском и русском. Отвечает по официальным учебникам через RAGFlow. Работает 24/7 бесплатно.</p>
+      </div>
+      <div class="card">
+        <h3>🛡️ FakeGuard</h3>
+        <p>Проверяет достоверность источников и учебных материалов. Анализирует текст, ссылки и фото. Формирует медиаграмотность у школьников.</p>
+      </div>
+      <div class="card">
+        <h3>🎤 Голосовой ввод</h3>
+        <p>Ученик говорит вопрос на казахском языке — Speech-to-text KZ распознаёт и передаёт AlemLLM. Не нужно печатать.</p>
+      </div>
+      <div class="card">
+        <h3>📚 По учебникам</h3>
+        <p>RAGFlow ищет ответ в загруженных учебниках Казахстана. Тьютор отвечает на основе официальной программы, а не из интернета.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: TECH -->
+  <div class="slide">
+    <div class="slide-num">04 / 08</div>
+    <div class="tag tag-blue">ТЕХНОЛОГИИ</div>
+    <h2>4 инструмента <span class="blue">alem.plus</span></h2>
+    <div style="margin-top:20px">
+      <div class="tool-row">
+        <div class="tool-icon" style="background:rgba(250,199,117,.12);border:1px solid rgba(250,199,117,.3)">🧠</div>
+        <div><div class="tool-name">AlemLLM — 247B параметров</div><div class="tool-desc">Казахский языковой ИИ от Astana Hub • llm.alem.ai/v1 • модель: alemllm</div></div>
+        <div class="check">✓</div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-icon" style="background:rgba(29,158,117,.12);border:1px solid rgba(29,158,117,.3)">🎤</div>
+        <div><div class="tool-name">Speech-to-text Kazakh</div><div class="tool-desc">Распознавание казахской речи • WAV 16kHz • автоотправка вопроса</div></div>
+        <div class="check">✓</div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-icon" style="background:rgba(250,199,117,.12);border:1px solid rgba(250,199,117,.3)">📚</div>
+        <div><div class="tool-name">RAGFlow + Embedder (text-1024)</div><div class="tool-desc">Поиск по учебникам • 1274 чанка • a1-ragflow1.alem.ai</div></div>
+        <div class="check">✓</div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-icon" style="background:rgba(255,0,144,.12);border:1px solid rgba(255,0,144,.3)">🛡️</div>
+        <div><div class="tool-name">FakeGuard — детектор фейков</div><div class="tool-desc">AlemLLM анализирует источники • RU / ҚЗ / EN • текст + фото + ссылка</div></div>
+        <div class="check">✓</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: DEMO -->
+  <div class="slide">
+    <div class="slide-num">05 / 08</div>
+    <div class="tag tag-green">КАК ЭТО РАБОТАЕТ</div>
+    <h2>Путь ученика</h2>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-content"><h4>Открывает сайт</h4><p>Выбирает предмет и класс. Вводит API ключ один раз — сохраняется в браузере.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot blue"></div>
+        <div class="tl-content"><h4>Говорит вопрос голосом</h4><p>Нажимает 🎤, говорит на казахском — Speech-to-text KZ распознаёт речь.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:#f59e0b"></div>
+        <div class="tl-content"><h4>RAGFlow ищет в учебнике</h4><p>Находит релевантные фрагменты из официальных учебников Казахстана.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-content"><h4>AlemLLM объясняет</h4><p>Отвечает как учитель-мастер: зачем → суть → пример → задача.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot pink"></div>
+        <div class="tl-content"><h4>Проверяет источник через FakeGuard</h4><p>Вставляет текст или ссылку — AlemLLM проверяет на фейк и манипуляции.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: MARKET -->
+  <div class="slide">
+    <div class="slide-num">06 / 08</div>
+    <div class="tag tag-blue">РЫНОК</div>
+    <h2>Огромный и незанятый <span class="blue">рынок</span></h2>
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="big-stat">3M+</div>
+        <div class="stat-label">школьников в Казахстане</div>
+      </div>
+      <div class="stat-box">
+        <div class="big-stat" style="color:var(--accent2)">20</div>
+        <div class="stat-label">городов охвата хакатона</div>
+      </div>
+      <div class="stat-box">
+        <div class="big-stat" style="color:#f59e0b">$5B</div>
+        <div class="stat-label">цель экспорта IT к 2029</div>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:20px">
+      <div class="card">
+        <h3>B2C — школьники</h3>
+        <p>Бесплатный базовый доступ. Премиум — история чатов, аналитика прогресса, неограниченные запросы.</p>
+      </div>
+      <div class="card">
+        <h3>B2B — школы и акиматы</h3>
+        <p>Лицензия для школ. Интеграция в e-learning платформы. Партнёрство с Министерством образования РК.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: STATUS -->
+  <div class="slide">
+    <div class="slide-num">07 / 08</div>
+    <div class="tag tag-green">СТАТУС MVP</div>
+    <h2>Что уже <span class="accent">работает</span></h2>
+    <table>
+      <tr><th>Компонент</th><th>Статус</th><th>Детали</th></tr>
+      <tr><td>AI Тьютор (AlemLLM)</td><td class="ok">✓ Готово</td><td>6 предметов, KZ/RU, мастер-промпты</td></tr>
+      <tr><td>Голосовой ввод (Speech-to-text KZ)</td><td class="ok">✓ Готово</td><td>WAV 16kHz, авто-отправка</td></tr>
+      <tr><td>FakeGuard</td><td class="ok">✓ Готово</td><td>Текст + фото + URL, 3 языка</td></tr>
+      <tr><td>RAGFlow + учебники</td><td class="ok">✓ Готово</td><td>1274 чанка, Информатика 10 кл</td></tr>
+      <tr><td>Embedder (text-1024)</td><td class="ok">✓ Готово</td><td>Векторизация учебников</td></tr>
+      <tr><td>GitLab репозиторий</td><td class="wait">⏳ В процессе</td><td>Публикация кода</td></tr>
+      <tr><td>Витрина alem.plus</td><td class="wait">⏳ В процессе</td><td>Публикация проекта</td></tr>
+    </table>
+  </div>
+
+  <!-- SLIDE 8: TEAM & PLANS -->
+  <div class="slide" style="text-align:center;align-items:center">
+    <div class="slide-num">08 / 08</div>
+    <div class="tag tag-green">КОМАНДА И ПЛАНЫ</div>
+    <h2>Дедлайн: <span class="accent">5 апреля 2026</span></h2>
+    <p style="margin-bottom:32px">У нас 10 дней — MVP готов, осталось опубликовать</p>
+    <div class="grid-3">
+      <div class="card" style="text-align:left">
+        <h3>Разработчик</h3>
+        <p>Frontend, API интеграции, архитектура</p>
+      </div>
+      <div class="card" style="text-align:left">
+        <h3>Контент</h3>
+        <p>Промпты, учебники, тестирование</p>
+      </div>
+      <div class="card" style="text-align:left">
+        <h3>Дизайн & Питч</h3>
+        <p>Презентация, демо, защита</p>
+      </div>
+    </div>
+    <div style="margin-top:32px;padding:20px;background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2);border-radius:14px">
+      <p style="color:var(--accent);font-size:18px;font-weight:600">Alem Tutor — это не просто хакатон</p>
+      <p style="margin-top:8px">Это реальный продукт для реальных школьников Казахстана</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
