@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Alem Tutor — AI мұғалім</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0f1e;--surface:#111827;--surface2:#1a2235;
+  --border:rgba(255,255,255,0.08);--accent:#4ade80;--accent2:#22d3ee;--accent3:#f59e0b;
+  --pink:#FF0090;--red:#FF1155;--yellow:#FFD600;
+  --text:#f1f5f9;--muted:#64748b;--user-bubble:#1e3a5f;--ai-bubble:#162032;
+  --font-d:'Unbounded',sans-serif;--font-b:'Golos Text',sans-serif;--font-m:'JetBrains Mono',monospace;
+}
+*{scrollbar-width:thin;scrollbar-color:var(--accent) transparent}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(74,222,128,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(74,222,128,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0;opacity:.12}
+.orb-1{width:500px;height:500px;background:#4ade80;top:-150px;right:-150px}
+.orb-2{width:400px;height:400px;background:#22d3ee;bottom:50px;left:-120px}
+
+/* ====== MODAL ====== */
+#modal{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:20px}
+#modal-box{background:var(--surface);border:1px solid rgba(74,222,128,.3);border-radius:20px;padding:32px 24px;width:100%;max-width:440px;box-shadow:0 0 60px rgba(74,222,128,.1)}
+.m-title{font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--accent);margin-bottom:10px}
+.m-sub{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:6px}
+.m-steps{background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.15);border-radius:10px;padding:14px;margin:14px 0;font-size:12px;line-height:2.1;color:var(--muted)}
+.m-steps b{color:var(--accent)}
+.m-inp{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--border);color:var(--text);padding:13px 16px;border-radius:10px;font-family:var(--font-b);font-size:13px;outline:none;margin-bottom:10px;transition:border-color .2s}
+.m-inp:focus{border-color:var(--accent)}
+.m-inp::placeholder{color:var(--muted)}
+.m-btn{width:100%;padding:15px;background:var(--accent);border:none;border-radius:10px;font-family:var(--font-d);font-weight:700;font-size:13px;color:#0a0f1e;cursor:pointer;transition:all .2s}
+.m-btn:hover{background:#86efac;transform:scale(1.01)}
+.m-note{font-size:11px;color:var(--muted);text-align:center;margin-top:10px}
+
+/* ====== TOAST ====== */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(74,222,128,.1);border:1px solid var(--accent);padding:10px 22px;border-radius:8px;font-family:var(--font-m);font-size:12px;color:var(--accent);z-index:9999;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none}
+#toast.on{opacity:1}
+
+/* ====== HEADER ====== */
+header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:rgba(10,15,30,.88);backdrop-filter:blur(14px);flex-wrap:wrap;gap:10px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--font-d);font-size:16px;font-weight:800}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo span{color:var(--accent)}
+.header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.alem-badge{display:flex;align-items:center;gap:5px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.2);border-radius:20px;padding:5px 11px;font-family:var(--font-m);font-size:10px;color:rgba(74,222,128,.75);letter-spacing:.5px}
+.lang-toggle{display:flex;gap:3px;background:var(--surface2);border-radius:10px;padding:3px}
+.lang-btn{padding:5px 11px;border:none;background:transparent;color:var(--muted);font-family:var(--font-b);font-size:12px;font-weight:600;border-radius:7px;cursor:pointer;transition:all .2s}
+.lang-btn.active{background:var(--accent);color:#0a0f1e}
+.hbtn{padding:7px 13px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font-b);font-size:12px;cursor:pointer;transition:all .2s}
+.hbtn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ====== TAB BAR (Tutor / FakeGuard) ====== */
+.tab-bar{position:relative;z-index:9;display:flex;background:rgba(10,15,30,.7);border-bottom:1px solid var(--border);backdrop-filter:blur(10px)}
+.tab-bar-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border:none;background:transparent;color:var(--muted);font-family:var(--font-b);font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab-bar-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-bar-btn.fg-tab.active{color:#FF0090;border-bottom-color:#FF0090}
+.tab-badge{font-size:10px;padding:2px 7px;border-radius:10px;background:rgba(255,0,144,.15);color:#FF0090;font-family:var(--font-m)}
+
+/* ====== MAIN LAYOUT ====== */
+main{position:relative;z-index:1;flex:1;display:flex;max-width:1100px;width:100%;margin:0 auto;padding:20px 16px;gap:16px}
+
+/* ====== SIDEBAR ====== */
+.sidebar{width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:6px}
+.sidebar-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:0 4px 6px}
+.subject-btn{display:flex;align-items:center;gap:9px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:11px;color:var(--text);font-family:var(--font-b);font-size:13px;cursor:pointer;transition:all .2s;text-align:left;width:100%}
+.subject-btn:hover{border-color:rgba(74,222,128,.3);background:var(--surface2)}
+.subject-btn.active{border-color:var(--accent);background:rgba(74,222,128,.08);color:var(--accent)}
+.subject-icon{font-size:16px}
+.grade-section{margin-top:12px}
+.grade-select{width:100%;padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:11px;color:var(--text);font-family:var(--font-b);font-size:13px;cursor:pointer;outline:none;transition:border-color .2s}
+.grade-select:focus{border-color:var(--accent)}
+.grade-select option{background:var(--surface)}
+
+/* ====== CHAT AREA ====== */
+.chat-area{flex:1;display:flex;flex-direction:column;gap:14px;min-width:0}
+.subject-banner{display:flex;align-items:center;gap:12px;padding:12px 18px;background:var(--surface);border:1px solid var(--border);border-radius:13px}
+.subject-banner-icon{font-size:22px}
+.subject-banner-info h2{font-family:var(--font-d);font-size:13px;font-weight:600}
+.subject-banner-info p{font-size:11px;color:var(--muted);margin-top:2px}
+
+.messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-right:4px;min-height:0;max-height:calc(100vh - 310px)}
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:40px 20px;text-align:center}
+.welcome-icon{width:68px;height:68px;background:linear-gradient(135deg,rgba(74,222,128,.12),rgba(34,211,238,.12));border:1px solid rgba(74,222,128,.25);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:32px}
+.welcome h2{font-family:var(--font-d);font-size:20px;font-weight:700;line-height:1.3}
+.welcome h2 span{color:var(--accent)}
+.welcome p{color:var(--muted);font-size:13px;max-width:360px;line-height:1.6}
+.quick-prompts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.quick-btn{padding:7px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:18px;color:var(--text);font-family:var(--font-b);font-size:12px;cursor:pointer;transition:all .2s}
+.quick-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+.message{display:flex;flex-direction:column;gap:5px;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.message.user{align-items:flex-end}
+.message.ai{align-items:flex-start}
+.bubble{max-width:78%;padding:12px 16px;border-radius:16px;font-size:14px;line-height:1.65}
+.message.user .bubble{background:var(--user-bubble);border:1px solid rgba(34,211,238,.2);border-bottom-right-radius:4px}
+.message.ai .bubble{background:var(--ai-bubble);border:1px solid var(--border);border-bottom-left-radius:4px}
+.bubble-label{font-size:10px;color:var(--muted);padding:0 4px;font-weight:600;letter-spacing:.5px}
+.typing-bubble{background:var(--ai-bubble);border:1px solid var(--border);border-radius:16px;border-bottom-left-radius:4px;padding:14px 18px;display:flex;gap:5px;align-items:center}
+.dot-t{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:bounce 1.2s infinite}
+.dot-t:nth-child(2){animation-delay:.2s}.dot-t:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+
+.input-section{display:flex;flex-direction:column;gap:8px}
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.input-wrapper{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px 4px 4px 14px;display:flex;align-items:flex-end;gap:6px;transition:border-color .2s}
+.input-wrapper:focus-within{border-color:rgba(74,222,128,.4)}
+textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font-b);font-size:14px;resize:none;line-height:1.5;padding:9px 0;max-height:120px}
+textarea::placeholder{color:var(--muted)}
+.send-btn{width:40px;height:40px;background:var(--accent);border:none;border-radius:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s;color:#0a0f1e}
+.mic-btn{width:40px;height:40px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .3s;color:var(--muted)}
+.mic-btn:hover{border-color:rgba(239,68,68,.5);color:rgba(239,68,68,.8)}
+.mic-btn.recording{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.7);color:rgb(239,68,68);animation:micPulse 1.5s infinite}
+@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,.0)}}
+.mic-wave{width:3px;height:14px;background:rgba(239,68,68,.8);border-radius:2px;animation:wave 0.8s ease-in-out infinite}
+@keyframes wave{0%,100%{height:6px}50%{height:16px}}
+.send-btn:hover{background:#86efac;transform:scale(1.05)}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.send-btn svg{width:16px;height:16px}
+.tools-row{display:flex;gap:8px;align-items:center}
+.tool-btn{padding:6px 12px;background:transparent;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-family:var(--font-b);font-size:11px;cursor:pointer;transition:all .2s}
+.tool-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tool-btn:disabled{opacity:.3;cursor:not-allowed}
+
+/* ====== FAKEGUARD PANEL ====== */
+#fg-panel{display:none;flex:1;flex-direction:column;gap:16px;min-width:0}
+#fg-panel.active{display:flex}
+
+.fg-card{background:rgba(13,20,38,.85);border:1px solid rgba(255,0,144,.15);border-radius:16px;padding:20px 18px}
+.fg-title{font-family:var(--font-m);font-size:10px;letter-spacing:2px;color:rgba(255,0,144,.7);text-transform:uppercase;margin-bottom:12px}
+
+.fg-tabs{display:flex;margin-bottom:18px;gap:0}
+.fg-tab{flex:1;padding:10px 0;font-family:var(--font-b);font-size:13px;font-weight:500;border:1px solid rgba(255,0,144,.2);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s}
+.fg-tab.on{background:rgba(255,0,144,.1);border-color:#FF0090;color:#FF0090}
+.fg-tab:first-child{border-radius:8px 0 0 8px}
+.fg-tab:last-child{border-radius:0 8px 8px 0}
+
+.fg-inp{width:100%;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);color:var(--text);padding:12px 14px;font-family:var(--font-b);font-size:14px;border-radius:8px;outline:none;transition:all .2s;resize:vertical}
+.fg-inp:focus{border-color:#FF0090;box-shadow:0 0 14px rgba(255,0,144,.12)}
+.fg-inp::placeholder{color:var(--muted)}
+.fg-inp-lbl{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;color:rgba(255,0,144,.6);text-transform:uppercase;margin-bottom:7px}
+
+/* drop zone */
+#dz{border:2px dashed rgba(255,0,144,.25);border-radius:11px;padding:28px 16px;text-align:center;cursor:pointer;transition:all .2s}
+#dz.over{border-color:#FF0090;background:rgba(255,0,144,.04)}
+#prv-img{max-width:100%;max-height:180px;border-radius:8px;margin-bottom:10px;border:1px solid rgba(255,0,144,.25)}
+.rm-btn-fg{font-size:12px;padding:6px 14px;border-radius:6px;border:1px solid rgba(255,17,85,.4);color:var(--red);background:rgba(255,17,85,.05);cursor:pointer}
+
+.fg-analyze-btn{width:100%;margin-top:16px;padding:16px;background:linear-gradient(135deg,#FF0090,#FF1155);border:none;border-radius:10px;font-family:var(--font-d);font-weight:700;font-size:13px;letter-spacing:1.5px;color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 0 30px rgba(255,0,144,.2)}
+.fg-analyze-btn:hover{transform:scale(1.01);box-shadow:0 0 40px rgba(255,0,144,.35)}
+.fg-analyze-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* loading */
+#fg-lbox{margin-top:14px;display:none}
+.fg-dots{display:flex;gap:5px;align-items:center}
+.fg-dot{width:6px;height:6px;border-radius:50%;background:#FF0090;animation:tdot 1.4s ease-in-out infinite}
+.fg-dot:nth-child(2){animation-delay:.2s}.fg-dot:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,60%,100%{transform:scale(.8);opacity:.4}30%{transform:scale(1.2);opacity:1}}
+.fg-lstep{font-size:13px;font-weight:500;color:#FF0090}
+#fg-pbar-w{height:3px;border-radius:2px;overflow:hidden;background:rgba(255,255,255,.05);margin-top:10px}
+#fg-pbar{height:100%;border-radius:2px;background:linear-gradient(90deg,#FF0090,#FF1155);width:0%;transition:width .3s}
+#fg-errbox{display:none;margin-top:12px;background:rgba(255,17,85,.07);border:1px solid rgba(255,17,85,.3);border-radius:8px;padding:11px 14px;font-size:13px;color:rgba(255,100,130,.9)}
+
+/* results */
+#fg-res{display:none;flex-direction:column;gap:14px;margin-top:16px}
+#fg-res.show{display:flex}
+#vcard{border-radius:16px;padding:22px 18px;text-align:center;border-width:2px;border-style:solid}
+.vemoji{font-size:3rem;margin-bottom:8px}
+.vtxt{font-family:var(--font-d);font-weight:800;font-size:1.8rem;margin-bottom:8px}
+.vsub{font-size:13px;color:rgba(220,232,255,.6);line-height:1.6;margin-bottom:10px}
+.vpill{display:inline-flex;align-items:center;gap:5px;padding:4px 13px;border-radius:100px;font-family:var(--font-m);font-size:11px}
+.fg-g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.gauge-w{position:relative;width:150px;height:150px;margin:10px auto 0}
+.kp{display:flex;flex-direction:column;gap:7px}
+.kp-item{display:flex;gap:10px;padding:9px 11px;border-radius:8px;border-left:3px solid}
+.recs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:9px}
+.rec{background:rgba(13,20,38,.6);border:1px solid rgba(255,0,144,.12);border-radius:10px;padding:12px}
+.rec-head{display:flex;align-items:flex-start;gap:9px}
+.rec-ico{font-size:18px}
+.rec-title{font-weight:600;font-size:12px;color:#FF0090;margin-bottom:2px}
+.rec-desc{font-size:12px;line-height:1.55;color:rgba(220,232,255,.55)}
+.fg-exp-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.fg-ebtn{padding:9px 16px;border-radius:9px;border:1px solid;background:transparent;cursor:pointer;font-size:12px;font-family:var(--font-b);transition:all .2s}
+
+/* lang toggle in fg */
+.fg-lang-row{display:flex;gap:6px;margin-bottom:16px}
+.fg-lbtn{padding:6px 14px;border-radius:16px;border:1px solid rgba(255,0,144,.2);background:transparent;color:var(--muted);font-family:var(--font-m);font-size:11px;cursor:pointer;transition:all .2s}
+.fg-lbtn.on{background:rgba(255,0,144,.1);border-color:#FF0090;color:#FF0090}
+
+@media(max-width:700px){
+  main{flex-direction:column;padding:12px}
+  .sidebar{width:100%;flex-direction:row;flex-wrap:wrap}
+  .sidebar-label,.grade-section{width:100%}
+  .subject-btn{flex:1;min-width:90px}
+  .messages{max-height:44vh}
+  #fg-panel{max-height:none}
+}
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div id="toast"></div>
+
+<!-- ====== MODAL ====== -->
+<div id="modal">
+  <div id="modal-box">
+    <div class="m-title">🔑 AlemLLM API ключ</div>
+    <p class="m-sub">Для работы тьютора и FakeGuard нужен ключ от <strong style="color:var(--accent)">plus.alem.ai</strong></p>
+    <div class="m-steps">
+      <b>1.</b> Зайди на <b>plus.alem.ai</b><br>
+      <b>2.</b> Сервисы → AlemLLM → <b>Получить API-ключ</b><br>
+      <b>3.</b> Скопируй ключ и вставь сюда ↓<br>
+      <b>4.</b> Один ключ работает для обоих модулей ✓
+    </div>
+    <input class="m-inp" type="password" id="key-inp" placeholder="sk-..."/>
+    <button class="m-btn" onclick="saveKey()">Начать обучение 🚀</button>
+    <p class="m-note">🔒 Ключ хранится только в твоём браузере</p>
+  </div>
+</div>
+
+<!-- ====== HEADER ====== -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🤖</div>
+    Alem <span>Tutor</span>
+  </div>
+  <div class="header-right">
+    <div class="alem-badge">⚡ AlemLLM • alemllm</div>
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('ru',this)">RU</button>
+      <button class="lang-btn" onclick="setLang('kz',this)">ҚЗ</button>
+    </div>
+    <button class="hbtn" onclick="document.getElementById('modal').style.display='flex'">🔑 Ключ</button>
+  </div>
+</header>
+
+<!-- ====== TAB BAR ====== -->
+<div class="tab-bar">
+  <button class="tab-bar-btn active" id="tab-tutor" onclick="switchTab('tutor')">
+    🤖 AI Тьютор
+  </button>
+  <button class="tab-bar-btn fg-tab" id="tab-fg" onclick="switchTab('fg')">
+    🛡️ FakeGuard
+    <span class="tab-badge">NEW</span>
+  </button>
+</div>
+
+<!-- ====== MAIN ====== -->
+<main>
+
+  <!-- SIDEBAR (shared) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-label" id="lbl-subject">Пән / Предмет</div>
+    <button class="subject-btn active" data-subject="math" onclick="selectSubject(this)">
+      <span class="subject-icon">📐</span><span class="sn" data-ru="Математика" data-kz="Математика">Математика</span>
+    </button>
+    <button class="subject-btn" data-subject="physics" onclick="selectSubject(this)">
+      <span class="subject-icon">⚡</span><span class="sn" data-ru="Физика" data-kz="Физика">Физика</span>
+    </button>
+    <button class="subject-btn" data-subject="history" onclick="selectSubject(this)">
+      <span class="subject-icon">🏛️</span><span class="sn" data-ru="История КЗ" data-kz="Қазақстан тарихы">История КЗ</span>
+    </button>
+    <button class="subject-btn" data-subject="chemistry" onclick="selectSubject(this)">
+      <span class="subject-icon">🧪</span><span class="sn" data-ru="Химия" data-kz="Химия">Химия</span>
+    </button>
+    <button class="subject-btn" data-subject="biology" onclick="selectSubject(this)">
+      <span class="subject-icon">🌿</span><span class="sn" data-ru="Биология" data-kz="Биология">Биология</span>
+    </button>
+    <button class="subject-btn" data-subject="informatics" onclick="selectSubject(this)">
+      <span class="subject-icon">💻</span><span class="sn" data-ru="Информатика" data-kz="Информатика">Информатика</span>
+    </button>
+    <div class="grade-section">
+      <div class="sidebar-label">Сынып / Класс</div>
+      <select class="grade-select" id="gradeSelect" onchange="currentGrade=this.value;updateBanner()">
+        <option value="9">9 класс</option>
+        <option value="10" selected>10 класс</option>
+        <option value="11">11 класс</option>
+      </select>
+    </div>
+  </aside>
+
+  <!-- ====== TUTOR PANEL ====== -->
+  <section class="chat-area" id="tutor-panel">
+    <div class="subject-banner">
+      <div class="subject-banner-icon" id="banner-icon">📐</div>
+      <div class="subject-banner-info">
+        <h2 id="banner-title">Математика — 10 класс</h2>
+        <p id="banner-desc">Задай вопрос — AlemLLM объяснит как хороший учитель</p>
+      <div id="rag-indicator" style="display:flex;align-items:center;gap:6px;margin-top:4px"><div style="width:6px;height:6px;border-radius:50%;background:#4ade80"></div><span style="font-size:10px;color:#4ade80;font-family:var(--font-m)">RAGFlow подключён — отвечаю по учебникам</span></div>
+      </div>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="welcome" id="welcome">
+        <div class="welcome-icon">🧠</div>
+        <h2>Сәлем! Мен сенің <span>AI мұғалімің</span></h2>
+        <p id="welcome-desc">Задай вопрос по предмету — AlemLLM объяснит простым языком с примерами, как хороший учитель.</p>
+        <div class="quick-prompts" id="quickPrompts"></div>
+      </div>
+    </div>
+
+    <div class="input-section">
+      <div class="input-row">
+        <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Говори на казахском или русском">
+          <svg id="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
+        <div class="input-wrapper">
+          <textarea id="userInput" rows="1"
+            placeholder="Задай вопрос или нажми 🎤 и говори..."
+            onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+      <div id="mic-status" style="display:none;align-items:center;gap:10px;padding:8px 14px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.25);border-radius:10px">
+        <div style="display:flex;gap:4px;align-items:center">
+          <div class="mic-wave"></div><div class="mic-wave" style="animation-delay:.15s"></div><div class="mic-wave" style="animation-delay:.3s"></div><div class="mic-wave" style="animation-delay:.45s"></div>
+        </div>
+        <span id="mic-status-text" style="font-size:12px;color:rgba(239,100,100,.9);font-family:var(--font-m)">Говори на казахском или русском…</span>
+        <button onclick="stopMic()" style="margin-left:auto;padding:4px 10px;border:1px solid rgba(239,68,68,.4);border-radius:6px;background:transparent;color:rgba(239,100,100,.8);font-size:11px;cursor:pointer">✕ Стоп</button>
+      </div>
+      <div class="tools-row">
+        <button class="tool-btn" id="simplerBtn" onclick="askSimpler()" disabled>
+          💡 <span id="simpler-text">Объясни проще</span>
+        </button>
+        <button class="tool-btn" id="practiceBtn" onclick="askPractice()" disabled>
+          ✏️ <span id="practice-text">Дай задачу</span>
+        </button>
+        <button class="tool-btn" onclick="clearChat()">🗑️ Очистить</button>
+        <button class="tool-btn" onclick="switchTab('fg')" style="margin-left:auto;border-color:rgba(255,0,144,.3);color:rgba(255,0,144,.7)">
+          🛡️ Проверить источник
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== FAKEGUARD PANEL ====== -->
+  <section id="fg-panel">
+
+    <!-- Lang toggle -->
+    <div class="fg-lang-row">
+      <button class="fg-lbtn on" onclick="setFgLang('ru',this)">RU</button>
+      <button class="fg-lbtn" onclick="setFgLang('kz',this)">ҚЗ</button>
+      <button class="fg-lbtn" onclick="setFgLang('en',this)">EN</button>
+      <span style="margin-left:auto;font-family:var(--font-m);font-size:10px;color:var(--muted)">⚡ AlemLLM</span>
+    </div>
+
+    <div class="fg-card">
+      <div class="fg-title">// Проверить источник на достоверность</div>
+
+      <!-- Tabs -->
+      <div class="fg-tabs">
+        <button class="fg-tab on" onclick="fgSw('text')" id="ft-text">📝 Текст</button>
+        <button class="fg-tab" onclick="fgSw('url')" id="ft-url">🔗 Ссылка</button>
+        <button class="fg-tab" onclick="fgSw('img')" id="ft-img">🖼️ Фото</button>
+      </div>
+
+      <!-- Text -->
+      <div id="fp-text">
+        <div class="fg-inp-lbl" id="fg-lbl-text">Текст статьи или утверждение</div>
+        <textarea id="fg-in-text" class="fg-inp" rows="6"
+          placeholder="Вставьте текст новости или утверждение…&#10;&#10;Мысал / Например: «ВОЗ зерттеуіне сәйкес кофе өмірді 20 жылға ұзартады»"
+          oninput="document.getElementById('fg-cc').textContent=this.value.length+' символов'"></textarea>
+        <div style="text-align:right;font-family:var(--font-m);font-size:10px;color:var(--muted);margin-top:4px" id="fg-cc">0 символов</div>
+      </div>
+
+      <!-- URL -->
+      <div id="fp-url" style="display:none">
+        <div class="fg-inp-lbl">Ссылка на статью</div>
+        <input id="fg-in-url" type="url" class="fg-inp" placeholder="https://example.com/news/...">
+        <p style="font-size:12px;color:var(--muted);margin-top:8px">💡 AlemLLM проанализирует источник и вынесет вердикт</p>
+      </div>
+
+      <!-- Image -->
+      <div id="fp-img" style="display:none">
+        <div class="fg-inp-lbl">Скриншот или фото материала</div>
+        <div id="dz" onclick="document.getElementById('fg-fi').click()"
+          ondragover="event.preventDefault();this.classList.add('over')"
+          ondragleave="this.classList.remove('over')"
+          ondrop="event.preventDefault();this.classList.remove('over');fgHandleFile(event.dataTransfer.files[0])">
+          <div id="dz-h">
+            <div style="font-size:2.5rem;margin-bottom:8px">📸</div>
+            <div style="font-family:var(--font-d);font-size:12px;font-weight:700;color:#FF0090;margin-bottom:4px">ЗАГРУЗИТЬ ФОТО</div>
+            <div style="font-size:12px;color:var(--muted)">PNG, JPG — перетащи или нажми</div>
+          </div>
+          <div id="dz-p" style="display:none">
+            <img id="prv-img" src="" alt="preview">
+            <button class="rm-btn-fg" onclick="event.stopPropagation();fgRmImg()">✕ Удалить</button>
+          </div>
+        </div>
+        <input type="file" id="fg-fi" accept="image/*" style="display:none" onchange="fgHandleFile(this.files[0])">
+      </div>
+
+      <button id="fg-abtn" class="fg-analyze-btn" onclick="fgGo()">🛡️ ТЕКСЕРУ / ПРОВЕРИТЬ</button>
+
+      <div id="fg-lbox">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div class="fg-dots"><div class="fg-dot"></div><div class="fg-dot"></div><div class="fg-dot"></div></div>
+          <div><div class="fg-lstep" id="fg-lstep">Анализирую…</div></div>
+        </div>
+        <div id="fg-pbar-w"><div id="fg-pbar"></div></div>
+      </div>
+      <div id="fg-errbox"><span id="fg-errtxt"></span></div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="fg-res">
+      <div style="font-family:var(--font-m);font-size:10px;color:var(--muted)" id="fg-rts"></div>
+
+      <div id="vcard">
+        <div class="vemoji" id="vemoji"></div>
+        <div class="vtxt" id="vtxt"></div>
+        <div class="vsub" id="vsub"></div>
+        <div class="vpill" id="vpill"></div>
+      </div>
+
+      <div class="fg-g2">
+        <div class="fg-card" style="text-align:center">
+          <div class="fg-title">Вероятность фейка</div>
+          <div class="gauge-w">
+            <svg width="150" height="150" viewBox="0 0 150 150">
+              <circle cx="75" cy="75" r="60" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="10"/>
+              <circle id="gring" cx="75" cy="75" r="60" fill="none" stroke="#00FFB0" stroke-width="10"
+                stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377"
+                transform="rotate(-90 75 75)" style="transition:stroke-dashoffset 1s,stroke .5s"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <div id="gpct" style="font-family:var(--font-d);font-weight:800;font-size:1.8rem">0%</div>
+              <div style="font-family:var(--font-m);font-size:9px;color:var(--muted)">ФЕЙК</div>
+            </div>
+          </div>
+        </div>
+        <div class="fg-card">
+          <div class="fg-title">Метрики анализа</div>
+          <canvas id="bchart" height="120"></canvas>
+        </div>
+      </div>
+
+      <div class="fg-card">
+        <div class="fg-title">Детальный анализ</div>
+        <div id="full-txt" style="font-size:13px;line-height:1.8;color:rgba(220,232,255,.75)"></div>
+      </div>
+
+      <div class="fg-card">
+        <div class="fg-title">Ключевые выводы</div>
+        <div class="kp" id="kp"></div>
+      </div>
+
+      <div class="fg-card">
+        <div class="fg-title">Рекомендации</div>
+        <div class="recs" id="recs"></div>
+      </div>
+
+      <div class="fg-exp-btns">
+        <button class="fg-ebtn" style="border-color:rgba(74,222,128,.4);color:var(--accent)" onclick="fgCopy()">📋 Копировать</button>
+        <button class="fg-ebtn" style="border-color:rgba(255,0,144,.4);color:#FF0090" onclick="fgReset()">↩ Новая проверка</button>
+        <button class="fg-ebtn" style="border-color:rgba(34,211,238,.3);color:var(--accent2)" onclick="switchTab('tutor')">🤖 Вернуться к тьютору</button>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<script>
+// ============================================================
+// ALEM TUTOR + FAKEGUARD — единое приложение на AlemLLM
+// ============================================================
+
+var API_KEY = '';
+var BASE_URL = 'https://llm.alem.ai/v1';
+var MODEL   = 'alemllm';
+
+// ====== RAGFlow ======
+var RAG_KEY        = 'ragflow-EkxxlvL5INk-tXLb2ETu4yea1c0PcoeQLj5liYCk1Ok';
+var RAG_URL        = 'https://a1-ragflow1.alem.ai';
+var RAG_DATASET_ID = '1ba2fccc2ad411f1b25a1660efacdd58';
+var RAG_ENABLED    = true;
+
+// ====== ОБЩЕЕ ======
+window.onload = function(){
+  var raw = localStorage.getItem('at_alem_key');
+  if(raw){
+    // Очищаем от не-ASCII символов (кириллица, спецсимволы)
+    API_KEY = raw.replace(/[^\x20-\x7E]/g, '').trim();
+    if(API_KEY){ document.getElementById('modal').style.display = 'none'; }
+  }
+  updateUI();
+  updateQuickPrompts();
+};
+
+document.getElementById('key-inp').addEventListener('keydown', function(e){
+  if(e.key==='Enter') saveKey();
+});
+
+function saveKey(){
+  // Очищаем ключ — оставляем только ASCII символы
+  var raw = document.getElementById('key-inp').value.trim();
+  var k = raw.replace(/[^\x20-\x7E]/g, '').trim();
+  if(!k){ showToast('Введи API ключ!'); return; }
+  API_KEY = k;
+  localStorage.setItem('at_alem_key', k);
+  document.getElementById('modal').style.display = 'none';
+  showToast('✓ AlemLLM подключён!');
+}
+
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  setTimeout(function(){ t.classList.remove('on'); }, 2500);
+}
+
+// ====== TAB SWITCH ======
+function switchTab(tab){
+  var isTutor = tab === 'tutor';
+  document.getElementById('tutor-panel').style.display = isTutor ? 'flex' : 'none';
+  document.getElementById('fg-panel').classList.toggle('active', !isTutor);
+  document.getElementById('tab-tutor').classList.toggle('active', isTutor);
+  document.getElementById('tab-fg').classList.toggle('active', !isTutor);
+  // sidebar — скрываем при FakeGuard на мобилке
+  document.getElementById('sidebar').style.opacity = isTutor ? '1' : '0.5';
+}
+
+// ====== TUTOR ======
+var lang = 'ru';
+var currentSubject = 'math';
+var currentGrade = '10';
+var messages = [];
+var isLoading = false;
+var lastAIMessage = '';
+
+var subjects = {
+  math:        {ru:'Математика', kz:'Математика',       icon:'📐'},
+  physics:     {ru:'Физика',     kz:'Физика',           icon:'⚡'},
+  history:     {ru:'История КЗ', kz:'Қазақстан тарихы', icon:'🏛️'},
+  chemistry:   {ru:'Химия',      kz:'Химия',            icon:'🧪'},
+  biology:     {ru:'Биология',   kz:'Биология',         icon:'🌿'},
+  informatics: {ru:'Информатика',kz:'Информатика',      icon:'💻'},
+};
+
+var quickPrompts = {
+  math:{ru:['Что такое производная?','Как решить квадратное уравнение?','Теорема Пифагора'],kz:['Туынды дегеніміз не?','Квадрат теңдеуді қалай шешемін?','Пифагор теоремасы']},
+  physics:{ru:['Что такое сила тока?','Закон Ньютона','Кинетическая энергия'],kz:['Ток күші дегеніміз не?','Ньютон заңы','Кинетикалық энергия']},
+  history:{ru:['Казахское ханство','Что такое АЛАШ?','Расскажи об Абае'],kz:['Қазақ хандығы','АЛАШ дегеніміз не?','Абай туралы']},
+  chemistry:{ru:['Что такое валентность?','Таблица Менделеева','Что такое pH?'],kz:['Валенттілік','Менделеев кестесі','pH дегеніміз не?']},
+  biology:{ru:['Что такое ДНК?','Фотосинтез','Как работает митоз?'],kz:['ДНҚ дегеніміз не?','Фотосинтез','Митоз']},
+  informatics:{ru:['Что такое алгоритм?','Циклы в программировании','Что такое массив?'],kz:['Алгоритм','Циклдер','Массив']},
+};
+
+var i18n = {
+  ru:{placeholder:'Задай вопрос по предмету...',simpler:'Объясни проще',you:'Вы',tutor:'Alem Tutor',bannerDesc:'Задай вопрос — AlemLLM объяснит как хороший учитель',welcomeDesc:'Задай вопрос по предмету — AlemLLM объяснит простым языком с примерами.'},
+  kz:{placeholder:'Пән бойынша сұрақ қой...',simpler:'Қарапайымырақ түсіндір',you:'Сіз',tutor:'Alem Tutor',bannerDesc:'Сұрақ қой — AlemLLM түсінікті түсіндіреді',welcomeDesc:'Пән бойынша сұрақ қой — AlemLLM жақсы мұғалім сияқты мысалдармен түсіндіреді.'},
+};
+
+function setLang(l, btn){
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  updateUI(); updateQuickPrompts();
+}
+
+function updateUI(){
+  var t = i18n[lang];
+  document.getElementById('userInput').placeholder = t.placeholder;
+  document.getElementById('simpler-text').textContent = t.simpler;
+  document.getElementById('banner-desc').textContent = t.bannerDesc;
+  var wd = document.getElementById('welcome-desc');
+  if(wd) wd.textContent = t.welcomeDesc;
+  document.querySelectorAll('.sn').forEach(function(el){
+    el.textContent = el.getAttribute('data-'+lang) || el.getAttribute('data-ru');
+  });
+  updateBanner();
+}
+
+function updateBanner(){
+  var s = subjects[currentSubject];
+  document.getElementById('banner-icon').textContent = s.icon;
+  document.getElementById('banner-title').textContent = s[lang] + ' — ' + currentGrade + ' класс';
+}
+
+function updateQuickPrompts(){
+  var c = document.getElementById('quickPrompts');
+  if(!c) return;
+  var p = quickPrompts[currentSubject][lang];
+  c.innerHTML = p.map(function(q){
+    return '<button class="quick-btn" onclick="quickAsk(this)">'+q+'</button>';
+  }).join('');
+}
+
+function selectSubject(btn){
+  document.querySelectorAll('.subject-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  currentSubject = btn.dataset.subject;
+  updateBanner(); updateQuickPrompts();
+}
+
+function autoResize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
+function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMessage(); } }
+function quickAsk(btn){ document.getElementById('userInput').value=btn.textContent; sendMessage(); }
+
+function clearChat(){
+  messages=[]; lastAIMessage='';
+  var c = document.getElementById('messages');
+  c.innerHTML='';
+  var w = document.createElement('div');
+  w.className='welcome'; w.id='welcome';
+  w.innerHTML='<div class="welcome-icon">🧠</div><h2>Сәлем! Мен сенің <span>AI мұғалімің</span></h2><p id="welcome-desc">'+i18n[lang].welcomeDesc+'</p><div class="quick-prompts" id="quickPrompts"></div>';
+  c.appendChild(w);
+  updateQuickPrompts();
+  document.getElementById('simplerBtn').disabled=true;
+  document.getElementById('practiceBtn').disabled=true;
+}
+
+async function searchRAG(query){
+  if(!RAG_ENABLED) return '';
+  try {
+    var resp = await fetch(RAG_URL + '/api/v1/retrieval', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + RAG_KEY
+      },
+      body: JSON.stringify({
+        question: query,
+        dataset_ids: [RAG_DATASET_ID],
+        top_k: 5,
+        similarity_threshold: 0.2,
+        vector_similarity_weight: 0.3
+      })
+    });
+    if(!resp.ok) return '';
+    var data = await resp.json();
+    if(data.data && data.data.chunks && data.data.chunks.length > 0){
+      var chunks = data.data.chunks.slice(0, 4).map(function(c){ return c.content_with_weight || c.content || ''; });
+      return chunks.filter(Boolean).join('\n\n');
+    }
+    return '';
+  } catch(e){ return ''; }
+}
+
+function getSystemPrompt(ragContext){
+  var s = subjects[currentSubject][lang];
+  var grade = currentGrade;
+  var ragSection = ragContext ? '\n\nКОНТЕКСТ ИЗ УЧЕБНИКА:\n"""\n' + ragContext + '\n"""\nИспользуй этот контекст как основу ответа. Ссылайся на учебник.' : '';
+
+  if(lang === 'kz') {
+    return [
+      'Сен — '+s+' пәнінің шебер мұғалімісің, '+grade+'-сынып оқушыларына сабақ бересің.',
+      'Сенің стилің:',
+      '— Алдымен НЕГЕ маңызды екенін айт: бұл ақпарат өмірде қайда кездеседі, не үшін керек.',
+      '— Күрделі терминдерді бірден емес, БІРТІНДЕП түсіндір — алдымен қарапайым сөзбен, кейін ресми атауы.',
+      '— Міндетті түрде НАҚТЫ мысал кел: Қазақстан өміріне, табиғатқа, технологияға байланысты.',
+      '— Егер формула немесе ереже болса — оны сатылап (қадамдарға бөліп) түсіндір.',
+      '— Бір ғана сұрақпен аяқта: оқушының түсінгенін тексеру үшін.',
+      '— Ынталандыр, мақта, сенімін арттыр.',
+      'Қазақ тілінде жауап бер. Жауапты 200-350 сөзбен шектей (егер формула немесе кесте болса — ұзынырақ болуы мүмкін).',
+      ragSection
+    ].join('\n');
+  }
+
+  var subjectPersonality = {
+    math: 'Ты объясняешь математику так, как это делают лучшие репетиторы — через логику, паттерны и реальные задачи. Никаких сухих формул без контекста.',
+    physics: 'Ты объясняешь физику через явления которые ученик видит каждый день — падение телефона, работа наушников, молния в небе. Законы физики — это описание реального мира.',
+    history: 'Ты рассказываешь историю Казахстана как захватывающий рассказ — с живыми людьми, их мотивами, конфликтами и решениями. Даты — это просто ориентиры, главное — смысл событий.',
+    chemistry: 'Ты объясняешь химию через то что ученик ест, пьёт и видит вокруг. Каждая реакция — это история взаимодействия веществ которые реальны и понятны.',
+    biology: 'Ты объясняешь биологию через восхищение жизнью. Каждый процесс в клетке — это маленькое чудо инженерии. Ты помогаешь увидеть красоту в устройстве живых организмов.',
+    informatics: 'Ты объясняешь информатику и программирование практически — через код который можно написать прямо сейчас, через задачи которые решают реальные проблемы.'
+  };
+
+  return [
+    'Ты — учитель-мастер по предмету "'+s+'" для учеников '+grade+' класса Казахстана.',
+    subjectPersonality[currentSubject] || '',
+    '',
+    'ТВОЙ СТИЛЬ ОБЪЯСНЕНИЯ:',
+    '1. ЗАЧЕМ — начни с того почему это важно в реальной жизни. Где ученик встретит это знание? Это захватывает внимание.',
+    '2. СУТЬ ПРОСТЫМИ СЛОВАМИ — объясни идею без жаргона, как будто рассказываешь другу. Потом введи термин.',
+    '3. КОНКРЕТНЫЙ ПРИМЕР — обязательно приведи живой пример из жизни, природы Казахстана, технологий или спорта. Не абстрактный, а который можно представить.',
+    '4. РАЗБОР ПО ШАГАМ — если есть формула, алгоритм или процесс — разбей на чёткие пронумерованные шаги.',
+    '5. МИНИ-ЗАДАЧА или ПРОВЕРОЧНЫЙ ВОПРОС — задай один вопрос в конце чтобы проверить понимание.',
+    '',
+    'ЗАПРЕЩЕНО:',
+    '— Отвечать сухо и энциклопедически.',
+    '— Давать определение без примера.',
+    '— Писать стены текста без структуры.',
+    '— Использовать "просто", "легко", "очевидно" — это демотивирует.',
+    '',
+    'Отвечай на русском языке. Длина ответа — 200-400 слов (если задача требует разбора — можно больше).',
+    'В конце каждого объяснения добавляй одну короткую фразу поддержки.',
+    ragSection
+  ].join('\n');
+}
+
+async function sendMessage(text){
+  var input = document.getElementById('userInput');
+  var userText = text || input.value.trim();
+  if(!userText || isLoading) return;
+  if(!API_KEY){ document.getElementById('modal').style.display='flex'; return; }
+  var w = document.getElementById('welcome');
+  if(w) w.remove();
+  messages.push({role:'user', content:userText});
+  appendMsg('user', userText);
+  input.value=''; input.style.height='auto';
+  var typ = appendTyping();
+  setLoading(true);
+  try{
+    // Ищем контекст в учебниках через RAGFlow
+    var ragContext = await searchRAG(userText);
+
+    var resp = await fetch(BASE_URL+'/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+sanitizeKey(API_KEY)},
+      body:JSON.stringify({model:MODEL,temperature:.7,max_tokens:1000,
+        messages:[{role:'system',content:getSystemPrompt(ragContext)}].concat(messages)})
+    });
+    var data = await resp.json();
+    typ.remove();
+    if(!resp.ok) throw new Error((data.error&&data.error.message)||'Ошибка '+resp.status);
+    var ai = data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+    if(!ai) throw new Error('AlemLLM не вернул ответ');
+    lastAIMessage = ai;
+    messages.push({role:'assistant',content:ai});
+    appendMsg('ai', ai);
+    document.getElementById('simplerBtn').disabled=false;
+    document.getElementById('practiceBtn').disabled=false;
+  }catch(e){
+    typ.remove();
+    appendMsg('ai','⚠️ Ошибка: '+e.message);
+  }
+  setLoading(false);
+}
+
+function askPractice(){
+  if(!lastAIMessage) return;
+  var s = subjects[currentSubject][lang];
+  var t = lang==='kz'
+    ? s+' бойынша маған '+currentGrade+'-сыныпқа сәйкес бір нақты есеп бер. Алдымен есепті бер, кейін мен шешуге тырысайын. Жауапты бірден берме.'
+    : 'Дай мне одну практическую задачу по теме "'+s+'" для '+currentGrade+' класса — похожую на то что мы только что обсуждали. Сначала только условие задачи. Подожди пока я попробую решить — не давай ответ сразу.';
+  sendMessage(t);
+}
+
+function askSimpler(){
+  if(!lastAIMessage) return;
+  var t = lang==='kz'
+    ? 'Қарапайымырақ түсіндір — 10 жасар бала түсінетіндей. Өмірден жақын мысал кел және негізгі идеяны бір сөйлеммен айт.'
+    : 'Объясни это иначе — представь что объясняешь 12-летнему ребёнку. Используй аналогию из реальной жизни (спорт, игры, природа, еда). Сформулируй главную мысль одним предложением в самом начале.';
+  sendMessage(t);
+}
+
+function appendMsg(role, text){
+  var c = document.getElementById('messages');
+  var t = i18n[lang];
+  var d = document.createElement('div');
+  d.className='message '+role;
+  d.innerHTML='<div class="bubble-label">'+(role==='user'?t.you:t.tutor)+'</div><div class="bubble">'+fmtText(text)+'</div>';
+  c.appendChild(d); c.scrollTop=c.scrollHeight; return d;
+}
+
+function appendTyping(){
+  var c = document.getElementById('messages');
+  var d = document.createElement('div');
+  d.className='message ai';
+  d.innerHTML='<div class="bubble-label">'+i18n[lang].tutor+'</div><div class="typing-bubble"><div class="dot-t"></div><div class="dot-t"></div><div class="dot-t"></div></div>';
+  c.appendChild(d); c.scrollTop=c.scrollHeight; return d;
+}
+
+function fmtText(t){
+  return t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/`(.*?)`/g,'<code style="background:rgba(74,222,128,.1);padding:1px 5px;border-radius:4px;font-size:12px">$1</code>')
+    .replace(/\n/g,'<br>');
+}
+
+function setLoading(s){
+  isLoading=s;
+  document.getElementById('sendBtn').disabled=s;
+  document.getElementById('userInput').disabled=s;
+}
+
+// ====== FAKEGUARD ======
+var fgLang = 'ru';
+var fgImgB64 = null, fgImgMime = null, fgLastResult = null, fgChart = null;
+
+var fgI18n = {
+  ru:{
+    steps:['Подготовка…','Отправка в AlemLLM…','Читаю контент…','Анализ фактов…','Проверка манипуляций…','Формирую вердикт…'],
+    lblText:'Текст статьи или утверждение',
+    sys:'Ты — FakeGuard AI, эксперт по выявлению дезинформации. Анализируй на русском языке. Отвечай ТОЛЬКО в JSON без markdown:\n{"fakeProbability":<0-100>,"verdict":"ФЕЙК"|"СМЕШАННО"|"ДОСТОВЕРНО","confidence":"ВЫСОКАЯ"|"СРЕДНЯЯ"|"НИЗКАЯ","summary":"<1-2 предложения>","fullAnalysis":"<3-5 абзацев>","keyPoints":[{"type":"red"|"yellow"|"green","text":"<вывод>"}],"sourceCredibility":<0-100>,"sentimentManipulation":<0-100>,"factAccuracy":<0-100>,"recommendations":[{"icon":"<emoji>","title":"<заголовок>","desc":"<описание>"}]}'
+  },
+  kz:{
+    steps:['Дайындалуда…','AlemLLM-ге жіберілуде…','Контент оқылуда…','Фактілер талдануда…','Манипуляция тексерілуде…','Үкім шығарылуда…'],
+    lblText:'Мақала мәтіні немесе пікір',
+    sys:'Сен — FakeGuard AI, дезинформацияны анықтау сарапшысысың. Қазақ тілінде талда. ТЕК JSON қайтар:\n{"fakeProbability":<0-100>,"verdict":"ЖАЛҒАН"|"АРАЛАС"|"СЕНІМДІ","confidence":"ЖОҒАРЫ"|"ОРТАША"|"ТӨМЕН","summary":"<1-2 сөйлем>","fullAnalysis":"<3-5 параграф>","keyPoints":[{"type":"red"|"yellow"|"green","text":"<қорытынды>"}],"sourceCredibility":<0-100>,"sentimentManipulation":<0-100>,"factAccuracy":<0-100>,"recommendations":[{"icon":"<emoji>","title":"<тақырып>","desc":"<сипаттама>"}]}'
+  },
+  en:{
+    steps:['Preparing…','Sending to AlemLLM…','Reading content…','Analyzing facts…','Checking manipulation…','Forming verdict…'],
+    lblText:'Article text or claim',
+    sys:'You are FakeGuard AI, disinformation detection expert. Reply ONLY in JSON:\n{"fakeProbability":<0-100>,"verdict":"FAKE"|"MIXED"|"CREDIBLE","confidence":"HIGH"|"MEDIUM"|"LOW","summary":"<1-2 sentences>","fullAnalysis":"<3-5 paragraphs>","keyPoints":[{"type":"red"|"yellow"|"green","text":"<finding>"}],"sourceCredibility":<0-100>,"sentimentManipulation":<0-100>,"factAccuracy":<0-100>,"recommendations":[{"icon":"<emoji>","title":"<title>","desc":"<description>"}]}'
+  }
+};
+
+function setFgLang(l, btn){
+  fgLang = l;
+  document.querySelectorAll('.fg-lbtn').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  document.getElementById('fg-lbl-text').textContent = fgI18n[l].lblText;
+}
+
+function fgSw(t){
+  ['text','url','img'].forEach(function(n){
+    document.getElementById('fp-'+n).style.display = n===t?'block':'none';
+    document.getElementById('ft-'+n).classList.toggle('on', n===t);
+  });
+}
+
+function fgHandleFile(f){
+  if(!f||!f.type.startsWith('image/')) return;
+  var r = new FileReader();
+  r.onload = function(e){
+    fgImgB64 = e.target.result.split(',')[1]; fgImgMime = f.type;
+    document.getElementById('prv-img').src = e.target.result;
+    document.getElementById('dz-h').style.display='none';
+    document.getElementById('dz-p').style.display='block';
+  };
+  r.readAsDataURL(f);
+}
+
+function fgRmImg(){
+  fgImgB64=null; fgImgMime=null;
+  document.getElementById('fg-fi').value='';
+  document.getElementById('prv-img').src='';
+  document.getElementById('dz-p').style.display='none';
+  document.getElementById('dz-h').style.display='block';
+}
+
+async function fgGo(){
+  var text = document.getElementById('fg-in-text').value.trim();
+  var url  = document.getElementById('fg-in-url').value.trim();
+  if(!text&&!url&&!fgImgB64){ fgShowErr('Введи текст, ссылку или загрузи фото'); return; }
+  if(!API_KEY){ document.getElementById('modal').style.display='flex'; return; }
+
+  var btn = document.getElementById('fg-abtn');
+  btn.disabled=true;
+  document.getElementById('fg-res').classList.remove('show');
+  document.getElementById('fg-errbox').style.display='none';
+  document.getElementById('fg-lbox').style.display='block';
+  document.getElementById('fg-pbar').style.width='0%';
+
+  var li = fgI18n[fgLang];
+  var STEPS = li.steps;
+  var si=0;
+  var iv=setInterval(function(){
+    if(si<STEPS.length){
+      document.getElementById('fg-lstep').textContent=STEPS[si];
+      document.getElementById('fg-pbar').style.width=Math.round((si+1)/STEPS.length*80)+'%';
+      si++;
+    }
+  },500);
+
+  var parts=[];
+  if(text) parts.push('ТЕКСТ:\n"""\n'+text+'\n"""');
+  if(url)  parts.push('URL: '+url);
+  if(fgImgB64) parts.push('[Прикреплено изображение — опиши что видишь и проанализируй на фейк]');
+
+  var msgs;
+  if(fgImgB64){
+    msgs=[
+      {role:'system',content:li.sys},
+      {role:'user',content:[
+        {type:'text',text:parts.join('\n\n')},
+        {type:'image_url',image_url:{url:'data:'+fgImgMime+';base64,'+fgImgB64}}
+      ]}
+    ];
+  } else {
+    msgs=[
+      {role:'system',content:li.sys},
+      {role:'user',content:parts.join('\n\n')}
+    ];
+  }
+
+  try{
+    var resp=await fetch(BASE_URL+'/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+sanitizeKey(API_KEY)},
+      body:JSON.stringify({model:MODEL,temperature:.3,max_tokens:2000,messages:msgs})
+    });
+    clearInterval(iv);
+    var data=await resp.json();
+    if(!resp.ok) throw new Error((data.error&&data.error.message)||'Ошибка '+resp.status);
+    var raw=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+    if(!raw) throw new Error('AlemLLM не вернул ответ');
+    var m=raw.replace(/```json|```/g,'').trim().match(/\{[\s\S]+\}/);
+    if(!m) throw new Error('Неожиданный формат ответа');
+    var r=JSON.parse(m[0]);
+    document.getElementById('fg-pbar').style.width='100%';
+    fgLastResult=r;
+    fgShowRes(r,text,url);
+  }catch(e){
+    clearInterval(iv);
+    fgShowErr(e.message||'Ошибка. Проверь ключ и соединение.');
+  }finally{
+    btn.disabled=false;
+    document.getElementById('fg-lbox').style.display='none';
+  }
+}
+
+function fgShowErr(msg){
+  document.getElementById('fg-errtxt').textContent=msg;
+  document.getElementById('fg-errbox').style.display='block';
+  setTimeout(function(){document.getElementById('fg-errbox').style.display='none';},5000);
+}
+
+function fgShowRes(r,text,url){
+  var vmap={
+    'ДОСТОВЕРНО':{emoji:'✅',color:'#00FFB0'},'СМЕШАННО':{emoji:'⚠️',color:'#FFD600'},'ФЕЙК':{emoji:'❌',color:'#FF1155'},
+    'CREDIBLE':{emoji:'✅',color:'#00FFB0'},'MIXED':{emoji:'⚠️',color:'#FFD600'},'FAKE':{emoji:'❌',color:'#FF1155'},
+    'СЕНІМДІ':{emoji:'✅',color:'#00FFB0'},'АРАЛАС':{emoji:'⚠️',color:'#FFD600'},'ЖАЛҒАН':{emoji:'❌',color:'#FF1155'}
+  };
+  var v=vmap[r.verdict]||{emoji:'⚠️',color:'#FFD600'};
+  var gc=r.fakeProbability<35?'#00FFB0':r.fakeProbability<65?'#FFD600':'#FF1155';
+
+  document.getElementById('fg-res').classList.add('show');
+  setTimeout(function(){document.getElementById('fg-res').scrollIntoView({behavior:'smooth',block:'start'});},100);
+  document.getElementById('fg-rts').textContent='AlemLLM • '+new Date().toLocaleString('ru-RU');
+
+  var vc=document.getElementById('vcard');
+  vc.style.borderColor=v.color; vc.style.boxShadow='0 0 30px '+v.color+'20';
+  document.getElementById('vemoji').textContent=v.emoji;
+  var vt=document.getElementById('vtxt');
+  vt.textContent=r.verdict; vt.style.color=v.color; vt.style.textShadow='0 0 20px '+v.color;
+  document.getElementById('vsub').textContent=r.summary;
+  var p=document.getElementById('vpill');
+  p.textContent='● '+r.confidence+' • '+r.fakeProbability+'% фейк';
+  p.style.background=v.color+'15'; p.style.border='1px solid '+v.color+'44'; p.style.color=v.color;
+
+  setTimeout(function(){
+    var ring=document.getElementById('gring');
+    ring.style.strokeDashoffset=377-(r.fakeProbability/100)*377;
+    ring.style.stroke=gc;
+    var gp=document.getElementById('gpct');
+    gp.textContent=r.fakeProbability+'%'; gp.style.color=gc;
+  },300);
+
+  if(fgChart) fgChart.destroy();
+  var ctx=document.getElementById('bchart').getContext('2d');
+  fgChart=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['Достоверность','Манипуляция','Точность фактов'],
+      datasets:[{
+        data:[r.sourceCredibility,r.sentimentManipulation,r.factAccuracy],
+        backgroundColor:['rgba(74,222,128,.2)','rgba(255,0,144,.2)','rgba(34,211,238,.2)'],
+        borderColor:['#4ade80','#FF0090','#22d3ee'],
+        borderWidth:2,borderRadius:4
+      }]
+    },
+    options:{
+      indexAxis:'y',plugins:{legend:{display:false}},
+      scales:{
+        x:{max:100,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(220,232,255,.5)',font:{size:10}}},
+        y:{grid:{display:false},ticks:{color:'rgba(220,232,255,.7)',font:{size:11}}}
+      },
+      animation:{duration:800}
+    }
+  });
+
+  document.getElementById('full-txt').textContent=r.fullAnalysis||'';
+
+  var ts={
+    red:{bg:'rgba(255,17,85,.07)',bl:'#FF1155',ico:'❌'},
+    yellow:{bg:'rgba(255,214,0,.07)',bl:'#FFD600',ico:'⚠️'},
+    green:{bg:'rgba(0,255,176,.07)',bl:'#00FFB0',ico:'✅'}
+  };
+  document.getElementById('kp').innerHTML=(r.keyPoints||[]).map(function(p){
+    var t=ts[p.type]||ts.yellow;
+    return '<div class="kp-item" style="background:'+t.bg+';border-left-color:'+t.bl+'"><span style="font-size:13px">'+t.ico+'</span><span style="font-size:13px;line-height:1.6;color:rgba(220,232,255,.82)">'+p.text+'</span></div>';
+  }).join('');
+
+  document.getElementById('recs').innerHTML=(r.recommendations||[]).map(function(rc){
+    return '<div class="rec"><div class="rec-head"><span class="rec-ico">'+rc.icon+'</span><div><div class="rec-title">'+rc.title+'</div><div class="rec-desc">'+rc.desc+'</div></div></div></div>';
+  }).join('');
+}
+
+function fgCopy(){
+  if(!fgLastResult){ showToast('Сначала сделай проверку'); return; }
+  navigator.clipboard.writeText('ОТЧЁТ FAKEGUARD × ALEM TUTOR\nAlemLLM by Astana Hub\n\nВердикт: '+fgLastResult.verdict+'\nВероятность фейка: '+fgLastResult.fakeProbability+'%\n\n'+fgLastResult.summary+'\n\n'+fgLastResult.fullAnalysis+'\n\nДата: '+new Date().toLocaleString('ru-RU'));
+  showToast('✓ Отчёт скопирован!');
+}
+
+function fgReset(){
+  document.getElementById('fg-res').classList.remove('show');
+  document.getElementById('fg-in-text').value='';
+  document.getElementById('fg-in-url').value='';
+  document.getElementById('fg-cc').textContent='0 символов';
+  fgRmImg();
+}
+
+
+// ====== SPEECH-TO-TEXT (alem.plus API) ======
+// Endpoint: https://llm.alem.ai/v1/audio/transcriptions
+// Model: speech-to-text | Format: multipart/form-data
+
+var STT_KEY = 'sk-QVX17IVVBxrun73Gk5hpzg';
+
+// Утилита — очистка ключа от не-ASCII символов
+function sanitizeKey(k){
+  return (k || '').replace(/[^\x20-\x7E]/g, '').trim();
+}
+var STT_URL = 'https://llm.alem.ai/v1/audio/transcriptions';
+var STT_MODEL = 'speech-to-text';
+
+var mediaRecorder = null;
+var audioChunks = [];
+var isRecording = false;
+var micStream = null, micAudioCtx = null, micProcessor = null, micPcmData = [];
+
+function toggleMic(){
+  if(isRecording){ stopMic(); return; }
+  startMic();
+}
+
+async function startMic(){
+  try {
+    var stream = await navigator.mediaDevices.getUserMedia({
+      audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true }
+    });
+    audioChunks = [];
+    micStream = stream;
+
+    // Используем WAV через AudioContext для максимальной совместимости
+    var AudioContext = window.AudioContext || window.webkitAudioContext;
+    micAudioCtx = new AudioContext({ sampleRate: 16000 });
+    var source = micAudioCtx.createMediaStreamSource(stream);
+    micProcessor = micAudioCtx.createScriptProcessor(4096, 1, 1);
+    micPcmData = [];
+
+    micProcessor.onaudioprocess = function(e) {
+      if(!isRecording) return;
+      var input = e.inputBuffer.getChannelData(0);
+      micPcmData.push(new Float32Array(input));
+    };
+
+    source.connect(micProcessor);
+    micProcessor.connect(micAudioCtx.destination);
+
+    isRecording = true;
+    document.getElementById('micBtn').classList.add('recording');
+    document.getElementById('mic-status').style.display = 'flex';
+    document.getElementById('mic-status-text').textContent =
+      lang === 'kz' ? 'Жазу жүріп жатыр… Тоқтату үшін 🎤 басыңыз' : 'Запись идёт… Нажми 🎤 чтобы остановить';
+
+  } catch(err) {
+    var msg = err.name === 'NotAllowedError'
+      ? (lang==='kz' ? 'Микрофонға рұқсат берілмеді' : 'Нет доступа к микрофону. Разреши в браузере.')
+      : (lang==='kz' ? 'Микрофон қатесі: ' : 'Ошибка микрофона: ') + err.message;
+    showToast(msg);
+  }
+}
+
+function stopMic(){
+  isRecording = false;
+  document.getElementById('micBtn').classList.remove('recording');
+
+  if(micProcessor){ try{ micProcessor.disconnect(); }catch(e){} micProcessor = null; }
+  if(micAudioCtx){ try{ micAudioCtx.close(); }catch(e){} micAudioCtx = null; }
+  if(micStream){ micStream.getTracks().forEach(function(t){ t.stop(); }); micStream = null; }
+
+  if(micPcmData && micPcmData.length > 0){
+    showMicProcessing();
+    var wavBlob = pcmToWav(micPcmData, 16000);
+    micPcmData = [];
+    sendToAlemSTT(wavBlob);
+  } else {
+    document.getElementById('mic-status').style.display = 'none';
+  }
+}
+
+// Конвертируем PCM Float32 данные в WAV Blob
+function pcmToWav(chunks, sampleRate){
+  // Собираем все чанки в один массив
+  var totalLen = 0;
+  chunks.forEach(function(c){ totalLen += c.length; });
+  var pcm = new Float32Array(totalLen);
+  var offset = 0;
+  chunks.forEach(function(c){ pcm.set(c, offset); offset += c.length; });
+
+  // Конвертируем float32 в int16
+  var int16 = new Int16Array(pcm.length);
+  for(var i = 0; i < pcm.length; i++){
+    var s = Math.max(-1, Math.min(1, pcm[i]));
+    int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+  }
+
+  // Собираем WAV заголовок
+  var wavLen = 44 + int16.byteLength;
+  var buf = new ArrayBuffer(wavLen);
+  var view = new DataView(buf);
+  var ch = 1, bps = 16, blockAlign = ch * bps / 8, byteRate = sampleRate * blockAlign;
+
+  function writeStr(v, off, str){ for(var i=0;i<str.length;i++) v.setUint8(off+i, str.charCodeAt(i)); }
+  writeStr(view, 0, 'RIFF');
+  view.setUint32(4, wavLen - 8, true);
+  writeStr(view, 8, 'WAVE');
+  writeStr(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, ch, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bps, true);
+  writeStr(view, 36, 'data');
+  view.setUint32(40, int16.byteLength, true);
+  var out = new Uint8Array(buf, 44);
+  var src = new Uint8Array(int16.buffer);
+  out.set(src);
+
+  return new Blob([buf], { type: 'audio/wav' });
+}
+
+function showMicProcessing(){
+  document.getElementById('mic-status').style.display = 'flex';
+  document.getElementById('mic-status-text').textContent =
+    lang === 'kz' ? '⏳ AlemLLM дыбысты өңдеп жатыр…' : '⏳ AlemLLM распознаёт речь…';
+}
+
+async function sendToAlemSTT(wavBlob){
+  try {
+    var formData = new FormData();
+    formData.append('file', wavBlob, 'audio.wav');
+    formData.append('model', STT_MODEL);
+    formData.append('language', lang === 'kz' ? 'kk' : 'ru');
+
+    var resp = await fetch(STT_URL, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + sanitizeKey(STT_KEY) },
+      body: formData
+    });
+
+    if(!resp.ok){
+      var errData = await resp.json().catch(function(){ return {}; });
+      throw new Error((errData.error && errData.error.message) || 'Ошибка ' + resp.status);
+    }
+
+    var data = await resp.json();
+    var text = data.text || data.transcript || '';
+
+    if(text.trim()){
+      var input = document.getElementById('userInput');
+      input.value = text.trim();
+      autoResize(input);
+      document.getElementById('mic-status-text').textContent =
+        lang === 'kz' ? '✓ Танылды! Жіберілуде…' : '✓ Распознано! Отправляю…';
+      setTimeout(function(){
+        document.getElementById('mic-status').style.display = 'none';
+        sendMessage();
+      }, 800);
+    } else {
+      showToast(lang === 'kz' ? 'Дыбыс анықталмады. Қайталап көр.' : 'Речь не распознана. Попробуй ещё раз.');
+      document.getElementById('mic-status').style.display = 'none';
+    }
+  } catch(e) {
+    showToast((lang==='kz' ? 'STT қатесі: ' : 'Ошибка STT: ') + e.message);
+    document.getElementById('mic-status').style.display = 'none';
+  }
+}
+
+// Останавливаем микрофон при смене вкладки
+var origSwitchTab = switchTab;
+switchTab = function(tab){
+  if(isRecording) stopMic();
+  origSwitchTab(tab);
+};
+
+</script>
+</body>
+</html>
